@@ -6,20 +6,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
     label { display: block; margin-top: 5px; }
-    #listDisplay { margin-top: 5px; font-weight: bold; }
+    #listDisplay, #resultDisplay { margin-top: 5px; font-weight: bold; }
   </style>
 </head>
 <body>
   <h2>探索アルゴリズムデモ</h2>
 
   <label>アルゴリズム選択：探索方法を選択</label>
-  <select id="algorithm">
+  <select id="algorithm" onchange="updateListDisplay()">
     <option value="linear">線形探索</option>
     <option value="binary">二分探索</option>
   </select>
 
   <label>要素数：リストに生成する要素の数</label>
-  <input type="number" id="listSize" value="10" min="1" max="50">
+  <input type="number" id="listSize" value="10" min="1" max="50" onchange="updateListDisplay()">
 
   <label>探索対象の数値：リストの中から探す値</label>
   <input type="number" id="target" value="5">
@@ -30,6 +30,7 @@
   <button onclick="runAlgorithm()">実行</button>
   <p id="counter">操作数: 0</p>
   <p id="listDisplay">リストの要素: -</p>
+  <p id="resultDisplay"></p>
 
   <script>
     let arr = [];
@@ -37,11 +38,13 @@
     let counter = 0;
     let currentIndex = -1;
     let animationRunning = false;
-    let status = []; // 要素の状態：0=未探索, 1=探索済み, 2=現在
+    let status = []; // 0=未探索, 1=探索済み, 2=現在
 
     function setup(){
       createCanvas(800, 250).parent(document.body);
       frameRate(2);
+      generateList(); // ページ読み込み時にリスト生成
+      updateListDisplay();
     }
 
     function draw(){
@@ -49,17 +52,16 @@
       if(animationRunning && steps.length > 0){
         currentIndex = steps[counter];
 
-        // 現在の要素を探索済みにする
-        if(currentIndex >= 0) status[currentIndex] = 2; // 現在
+        if(currentIndex >= 0) status[currentIndex] = 2; // 現在探索中
         drawArray();
 
-        // 探索完了後、現在要素を探索済みに戻す
-        if(currentIndex >= 0) status[currentIndex] = 1; // 探索済み
+        if(currentIndex >= 0) status[currentIndex] = 1; // 探索済みに戻す
 
         counter++;
         if(counter >= steps.length) {
           steps = [];
           animationRunning = false;
+          showResult();
         }
         document.getElementById("counter").innerText = "操作数: " + counter;
       } else {
@@ -71,11 +73,11 @@
     function drawArray(){
       for(let i=0;i<arr.length;i++){
         if(status[i] === 2){
-          fill('red'); // 現在探索中
+          fill('red');
         } else if(status[i] === 1){
-          fill('gray'); // 探索済み
+          fill('gray');
         } else {
-          fill('blue'); // 未探索
+          fill('blue');
         }
         rect(50*i, height-50, 40, -arr[i]*10);
         fill(0);
@@ -84,30 +86,36 @@
       }
     }
 
-    function runAlgorithm(){
+    function generateList(){
       let size = parseInt(document.getElementById("listSize").value);
+      arr = Array.from({length:size}, ()=>Math.floor(Math.random()*20)+1);
+      if(document.getElementById("algorithm").value === 'binary'){
+        arr.sort((a,b)=>a-b);
+      }
+      status = new Array(arr.length).fill(0);
+    }
+
+    function updateListDisplay(){
+      generateList();
+      document.getElementById("listDisplay").innerText = "リストの要素: " + arr.join(", ");
+      document.getElementById("resultDisplay").innerText = "";
+    }
+
+    function runAlgorithm(){
       let target = parseInt(document.getElementById("target").value);
       let algo = document.getElementById("algorithm").value;
 
-      // 配列生成
-      arr = Array.from({length:size}, ()=>Math.floor(Math.random()*20)+1);
-      if(algo === 'binary'){
-        arr.sort((a,b)=>a-b);
-      }
-
-      // 要素表示
-      document.getElementById("listDisplay").innerText = "リストの要素: " + arr.join(", ");
-
-      // 状態配列初期化
-      status = new Array(arr.length).fill(0);
-
-      // アニメーション準備
       counter = 0;
       steps = [];
       animationRunning = true;
+      status.fill(0);
+      document.getElementById("resultDisplay").innerText = "";
 
       if(algo === 'linear'){
-        for(let i=0;i<arr.length;i++) steps.push(i);
+        for(let i=0;i<arr.length;i++){
+          steps.push(i);
+          if(arr[i] === target) break; // 見つけたら止める
+        }
       } else if(algo === 'binary'){
         let left = 0;
         let right = arr.length-1;
@@ -118,6 +126,15 @@
           else if(arr[mid] < target) left = mid+1;
           else right = mid-1;
         }
+      }
+    }
+
+    function showResult(){
+      let target = parseInt(document.getElementById("target").value);
+      if(arr.includes(target)){
+        document.getElementById("resultDisplay").innerText = "探索完了：要素 " + target + " を見つけました";
+      } else {
+        document.getElementById("resultDisplay").innerText = "探索完了：要素 " + target + " はリストに存在しません";
       }
     }
   </script>
