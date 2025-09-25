@@ -38,7 +38,7 @@ let steps = [];
 let counter = 0;
 let currentIndex = -1;
 let animationRunning = false;
-let status = []; // 0=未探索,1=探索済,2=現在
+let status = [];
 let foundIndex = -1;
 
 function setup(){
@@ -77,6 +77,12 @@ function drawArray(curLeft, curRight){
   let n = arr.length;
   let barWidth = width / n * 0.8;
   let gap = width / n * 0.2;
+
+  // 二分探索範囲を強調
+  if(document.getElementById("algorithm").value==='binary' && animationRunning){
+    fill(173, 216, 230, 100); // 薄い青
+    rect(curLeft*(barWidth+gap), 0, (curRight-curLeft+1)*(barWidth+gap), height);
+  }
 
   for(let i=0;i<n;i++){
     let fillColor = 'blue';
