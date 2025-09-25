@@ -4,14 +4,29 @@
   <meta charset="UTF-8">
   <title>Algorithm Demo</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <style>
+    label { display: block; margin-top: 5px; }
+  </style>
 </head>
 <body>
-  <h2>線形探索デモ</h2>
+  <h2>探索アルゴリズムデモ</h2>
+
+  <!-- UI説明付き -->
+  <label>アルゴリズム選択：探索方法を選択</label>
   <select id="algorithm">
     <option value="linear">線形探索</option>
+    <option value="binary">二分探索</option>
   </select>
-  <input type="number" id="listSize" value="10" min="1" max="20">
+
+  <label>要素数：リストに生成する要素の数</label>
+  <input type="number" id="listSize" value="10" min="1" max="50">
+
+  <label>探索対象の数値：リストの中から探す値</label>
   <input type="number" id="target" value="5">
+
+  <label>アニメーション速度（1～5）</label>
+  <input type="range" id="speed" min="1" max="5" value="3">
+
   <button onclick="runAlgorithm()">実行</button>
   <p id="counter">操作数: 0</p>
 
@@ -19,37 +34,75 @@
     let arr = [];
     let steps = [];
     let counter = 0;
+    let currentIndex = -1;
 
     function setup(){
-      createCanvas(600, 200).parent(document.body);
-      frameRate(2); // アニメーション速度調整
+      createCanvas(800, 250).parent(document.body);
+      frameRate(2);
     }
 
     function draw(){
       background(255);
-      if(steps.length>0){
+      if(steps.length > 0){
         drawArray();
+        currentIndex = steps[counter];
         counter++;
-        if(counter>=steps.length) steps = [];
+        if(counter >= steps.length) steps = [];
         document.getElementById("counter").innerText = "操作数: " + counter;
+      } else {
+        currentIndex = -1; // アニメーション終了
       }
     }
 
     function drawArray(){
       for(let i=0;i<arr.length;i++){
-        fill(i === steps[counter]? 'red':'blue');
+        if(i === currentIndex){
+          fill('red'); // 探索中の要素
+        } else {
+          fill('blue');
+        }
         rect(50*i, height-50, 40, -arr[i]*10);
+        fill(0);
+        textAlign(CENTER, BOTTOM);
+        text(arr[i], 50*i+20, height-55); // 数値表示
       }
     }
 
     function runAlgorithm(){
       let size = parseInt(document.getElementById("listSize").value);
-      arr = Array.from({length:size}, ()=>Math.floor(Math.random()*10)+1);
       let target = parseInt(document.getElementById("target").value);
+      let algo = document.getElementById("algorithm").value;
+
+      // 配列生成
+      arr = Array.from({length:size}, ()=>Math.floor(Math.random()*20)+1);
+
+      // 二分探索の場合はソート
+      if(algo === 'binary'){
+        arr.sort((a,b)=>a-b);
+      }
+
       counter = 0;
       steps = [];
-      // 線形探索ステップ生成
-      for(let i=0;i<arr.length;i++) steps.push(i);
+
+      if(algo === 'linear'){
+        // 線形探索ステップ
+        for(let i=0;i<arr.length;i++) steps.push(i);
+      } else if(algo === 'binary'){
+        // 二分探索ステップ
+        let left = 0;
+        let right = arr.length - 1;
+        while(left <= right){
+          let mid = Math.floor((left+right)/2);
+          steps.push(mid);
+          if(arr[mid] === target){
+            break;
+          } else if(arr[mid] < target){
+            left = mid + 1;
+          } else {
+            right = mid -1;
+          }
+        }
+      }
     }
   </script>
 </body>
