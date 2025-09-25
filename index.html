@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Algorithm Demo</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+</head>
+<body>
+  <h2>線形探索デモ</h2>
+  <select id="algorithm">
+    <option value="linear">線形探索</option>
+  </select>
+  <input type="number" id="listSize" value="10" min="1" max="20">
+  <input type="number" id="target" value="5">
+  <button onclick="runAlgorithm()">実行</button>
+  <p id="counter">操作数: 0</p>
+
+  <script>
+    let arr = [];
+    let steps = [];
+    let counter = 0;
+
+    function setup(){
+      createCanvas(600, 200).parent(document.body);
+      frameRate(2); // アニメーション速度調整
+    }
+
+    function draw(){
+      background(255);
+      if(steps.length>0){
+        drawArray();
+        counter++;
+        if(counter>=steps.length) steps = [];
+        document.getElementById("counter").innerText = "操作数: " + counter;
+      }
+    }
+
+    function drawArray(){
+      for(let i=0;i<arr.length;i++){
+        fill(i === steps[counter]? 'red':'blue');
+        rect(50*i, height-50, 40, -arr[i]*10);
+      }
+    }
+
+    function runAlgorithm(){
+      let size = parseInt(document.getElementById("listSize").value);
+      arr = Array.from({length:size}, ()=>Math.floor(Math.random()*10)+1);
+      let target = parseInt(document.getElementById("target").value);
+      counter = 0;
+      steps = [];
+      // 線形探索ステップ生成
+      for(let i=0;i<arr.length;i++) steps.push(i);
+    }
+  </script>
+</body>
+</html>
