@@ -78,27 +78,26 @@ function drawArray(){
   for(let i=0;i<n;i++){
     let fillColor = 'blue';
 
-    // 二分探索で範囲外はグレー
-    if(document.getElementById("algorithm").value==='binary' && (i<left || i>right)){
+    // 二分探索で範囲外は探索中のみグレー
+    if(document.getElementById("algorithm").value==='binary' && animationRunning && (i<left || i>right)){
       fillColor='gray';
     }
-    // 探索済みのバー
-    else if(status[i]===1) fillColor='gray';
+    // 探索済みのバー（見つかった要素は黄色）
+    else if(status[i]===1 && i!==foundIndex) fillColor='gray';
     // 現在探索中
     if(status[i]===2) fillColor='red';
-    // 見つかった要素を強調
+    // 見つかった要素
     if(i===foundIndex) fillColor='yellow';
 
     fill(fillColor);
     rect(i*(barWidth+gap), height-50, barWidth, -arr[i]*8);
 
-    // 枠を太めにして見つかったバーを強調
+    // 見つかったバーを太枠で強調
     if(i===foundIndex){
       strokeWeight(3);
       stroke(0);
       rect(i*(barWidth+gap), height-50, barWidth, -arr[i]*8);
-      noStroke();
-      strokeWeight(1);
+      noStroke(); strokeWeight(1);
     }
 
     fill(0);
