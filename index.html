@@ -1,142 +1,170 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Algorithm Demo</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
-  <style>
-    label { display: block; margin-top: 5px; }
-    #listDisplay, #resultDisplay { margin-top: 5px; font-weight: bold; }
-  </style>
+<meta charset="UTF-8">
+<title>Algorithm Demo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+<style>
+  label { display: block; margin-top: 5px; }
+  #listDisplay, #resultDisplay { margin-top: 5px; font-weight: bold; }
+</style>
 </head>
 <body>
-  <h2>探索アルゴリズムデモ</h2>
+<h2>探索アルゴリズムデモ</h2>
 
-  <label>アルゴリズム選択：探索方法を選択</label>
-  <select id="algorithm" onchange="updateListDisplay()">
-    <option value="linear">線形探索</option>
-    <option value="binary">二分探索</option>
-  </select>
+<label>アルゴリズム選択：探索方法を選択</label>
+<select id="algorithm" onchange="updateListDisplay()">
+  <option value="linear">線形探索</option>
+  <option value="binary">二分探索</option>
+</select>
 
-  <label>要素数：リストに生成する要素の数</label>
-  <input type="number" id="listSize" value="10" min="1" max="50" onchange="updateListDisplay()">
+<label>要素数（最大30）：リストに生成する要素の数</label>
+<input type="number" id="listSize" value="10" min="1" max="30" onchange="updateListDisplay()">
 
-  <label>探索対象の数値：リストの中から探す値</label>
-  <input type="number" id="target" value="5">
+<label>探索対象の数値：リストの中から探す値</label>
+<input type="number" id="target" value="5">
 
-  <label>アニメーション速度（1～5）</label>
-  <input type="range" id="speed" min="1" max="5" value="3">
+<label>アニメーション速度（1〜5）</label>
+<input type="range" id="speed" min="1" max="5" value="3" onchange="updateFrameRate()">
 
-  <button onclick="runAlgorithm()">実行</button>
-  <p id="counter">操作数: 0</p>
-  <p id="listDisplay">リストの要素: -</p>
-  <p id="resultDisplay"></p>
+<button onclick="runAlgorithm()">実行</button>
+<p id="counter">操作数: 0</p>
+<p id="listDisplay">リストの要素: -</p>
+<p id="resultDisplay"></p>
 
-  <script>
-    let arr = [];
-    let steps = [];
-    let counter = 0;
-    let currentIndex = -1;
-    let animationRunning = false;
-    let status = []; // 0=未探索, 1=探索済み, 2=現在
+<script>
+let arr = [];
+let steps = [];
+let counter = 0;
+let currentIndex = -1;
+let animationRunning = false;
+let status = []; // 0=未探索,1=探索済,2=現在
+let left=0, right=0;
+let foundIndex = -1;
 
-    function setup(){
-      createCanvas(800, 250).parent(document.body);
-      frameRate(2);
-      generateList(); // ページ読み込み時にリスト生成
-      updateListDisplay();
-    }
+function setup(){
+  createCanvas(1000, 300).parent(document.body);
+  updateFrameRate();
+  generateList();
+  updateListDisplay();
+}
 
-    function draw(){
-      background(255);
-      if(animationRunning && steps.length > 0){
-        currentIndex = steps[counter];
+function draw(){
+  background(255);
+  if(animationRunning && steps.length > 0){
+    currentIndex = steps[counter];
 
-        if(currentIndex >= 0) status[currentIndex] = 2; // 現在探索中
-        drawArray();
+    if(currentIndex >= 0) status[currentIndex] = 2;
+    drawArray();
+    if(currentIndex >= 0) status[currentIndex] = 1;
 
-        if(currentIndex >= 0) status[currentIndex] = 1; // 探索済みに戻す
-
-        counter++;
-        if(counter >= steps.length) {
-          steps = [];
-          animationRunning = false;
-          showResult();
-        }
-        document.getElementById("counter").innerText = "操作数: " + counter;
-      } else {
-        currentIndex = -1;
-        drawArray(); // 探索終了後も画面残す
-      }
-    }
-
-    function drawArray(){
-      for(let i=0;i<arr.length;i++){
-        if(status[i] === 2){
-          fill('red');
-        } else if(status[i] === 1){
-          fill('gray');
-        } else {
-          fill('blue');
-        }
-        rect(50*i, height-50, 40, -arr[i]*10);
-        fill(0);
-        textAlign(CENTER, BOTTOM);
-        text(arr[i], 50*i+20, height-55);
-      }
-    }
-
-    function generateList(){
-      let size = parseInt(document.getElementById("listSize").value);
-      arr = Array.from({length:size}, ()=>Math.floor(Math.random()*20)+1);
-      if(document.getElementById("algorithm").value === 'binary'){
-        arr.sort((a,b)=>a-b);
-      }
-      status = new Array(arr.length).fill(0);
-    }
-
-    function updateListDisplay(){
-      generateList();
-      document.getElementById("listDisplay").innerText = "リストの要素: " + arr.join(", ");
-      document.getElementById("resultDisplay").innerText = "";
-    }
-
-    function runAlgorithm(){
-      let target = parseInt(document.getElementById("target").value);
-      let algo = document.getElementById("algorithm").value;
-
-      counter = 0;
+    counter++;
+    if(counter >= steps.length){
+      animationRunning = false;
       steps = [];
-      animationRunning = true;
-      status.fill(0);
-      document.getElementById("resultDisplay").innerText = "";
+      showResult();
+    }
+    document.getElementById("counter").innerText = "操作数: " + counter;
+  } else {
+    drawArray(); // 探索終了後も画面残す
+  }
+}
 
-      if(algo === 'linear'){
-        for(let i=0;i<arr.length;i++){
-          steps.push(i);
-          if(arr[i] === target) break; // 見つけたら止める
-        }
-      } else if(algo === 'binary'){
-        let left = 0;
-        let right = arr.length-1;
-        while(left <= right){
-          let mid = Math.floor((left+right)/2);
-          steps.push(mid);
-          if(arr[mid] === target) break;
-          else if(arr[mid] < target) left = mid+1;
-          else right = mid-1;
-        }
-      }
+function drawArray(){
+  let n = arr.length;
+  let barWidth = width / n * 0.8;
+  let gap = width / n * 0.2;
+
+  for(let i=0;i<n;i++){
+    let fillColor = 'blue';
+
+    // 二分探索で範囲外はグレー
+    if(document.getElementById("algorithm").value==='binary' && (i<left || i>right)){
+      fillColor='gray';
+    }
+    // 探索済みのバー
+    else if(status[i]===1) fillColor='gray';
+    // 現在探索中
+    if(status[i]===2) fillColor='red';
+    // 見つかった要素を強調
+    if(i===foundIndex) fillColor='yellow';
+
+    fill(fillColor);
+    rect(i*(barWidth+gap), height-50, barWidth, -arr[i]*8);
+
+    // 枠を太めにして見つかったバーを強調
+    if(i===foundIndex){
+      strokeWeight(3);
+      stroke(0);
+      rect(i*(barWidth+gap), height-50, barWidth, -arr[i]*8);
+      noStroke();
+      strokeWeight(1);
     }
 
-    function showResult(){
-      let target = parseInt(document.getElementById("target").value);
-      if(arr.includes(target)){
-        document.getElementById("resultDisplay").innerText = "探索完了：要素 " + target + " を見つけました";
-      } else {
-        document.getElementById("resultDisplay").innerText = "探索完了：要素 " + target + " はリストに存在しません";
+    fill(0);
+    textAlign(CENTER,BOTTOM);
+    text(arr[i], i*(barWidth+gap)+barWidth/2, height-55);
+  }
+}
+
+function generateList(){
+  let size = parseInt(document.getElementById("listSize").value);
+  arr = Array.from({length:size}, ()=>Math.floor(Math.random()*30)+1);
+  if(document.getElementById("algorithm").value==='binary') arr.sort((a,b)=>a-b);
+  status = new Array(arr.length).fill(0);
+  foundIndex=-1;
+}
+
+function updateListDisplay(){
+  generateList();
+  document.getElementById("listDisplay").innerText = "リストの要素: "+arr.join(", ");
+  document.getElementById("resultDisplay").innerText="";
+}
+
+function runAlgorithm(){
+  let target = parseInt(document.getElementById("target").value);
+  let algo = document.getElementById("algorithm").value;
+
+  counter=0; steps=[]; animationRunning=true;
+  status.fill(0);
+  foundIndex=-1;
+  document.getElementById("resultDisplay").innerText="";
+
+  if(algo==='linear'){
+    for(let i=0;i<arr.length;i++){
+      steps.push(i);
+      if(arr[i]===target){
+        foundIndex=i; // 見つかった要素
+        break;
       }
     }
-  </script>
+  } else if(algo==='binary'){
+    left=0; right=arr.length-1;
+    while(left<=right){
+      let mid = Math.floor((left+right)/2);
+      steps.push(mid);
+      if(arr[mid]===target){
+        foundIndex=mid;
+        break;
+      } else if(arr[mid]<target) left=mid+1;
+      else right=mid-1;
+    }
+  }
+}
+
+function showResult(){
+  let target = parseInt(document.getElementById("target").value);
+  if(foundIndex>=0){
+    document.getElementById("resultDisplay").innerText="探索完了：要素 "+target+" を見つけました";
+  } else {
+    document.getElementById("resultDisplay").innerText="探索完了：要素 "+target+" はリストに存在しません";
+  }
+}
+
+function updateFrameRate(){
+  let speed = parseInt(document.getElementById("speed").value);
+  frameRate(speed*2);
+}
+</script>
 </body>
 </html>
